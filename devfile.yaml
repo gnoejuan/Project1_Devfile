@@ -1,5 +1,5 @@
 # https://docs.devfile.io/devfile/2.1.0/user-guide/migrating-schema-version.html
-schemaVersion: 2.1.0
+schemaVersion: 2.0.0
 metadata:
   name: project1
   generateName: java-maven-tomcat
