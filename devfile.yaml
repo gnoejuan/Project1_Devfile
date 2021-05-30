@@ -1,0 +1,108 @@
+apiVersion: 1.0.0
+metadata:
+  generateName: java-maven-
+projects:
+  -
+    name: Project1
+    source:
+      type: git
+      location: "git@gitlab.com:CharlesRod/project1.git"
+components:
+  -
+    type: chePlugin
+    id: redhat/java/latest
+    preferences:
+      java.server.launchMode: Standard
+  -
+    type: dockerimage
+    alias: maven
+    image: quay.io/eclipse/che-java8-maven:nightly
+    env:
+      - name: MAVEN_CONFIG
+        value: ""
+      - name: MAVEN_OPTS
+        value: "-XX:MaxRAMPercentage=50 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+          -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+          -Dsun.zip.disableMemoryMapping=true -Xms20m -Djava.security.egd=file:/dev/./urandom
+          -Duser.home=/home/user"
+      - name: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=50 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+          -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+          -Dsun.zip.disableMemoryMapping=true -Xms20m -Djava.security.egd=file:/dev/./urandom"
+      - name: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=50 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+          -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+          -Dsun.zip.disableMemoryMapping=true -Xms20m -Djava.security.egd=file:/dev/./urandom"
+    memoryLimit: 512Mi
+    mountSources: true
+    volumes:
+      - name: m2
+        containerPath: /home/user/.m2
+    endpoints:
+      - name: 'debug'
+        port: 5005
+        attributes:
+          public: 'false'
+  -
+    type: dockerimage
+    alias: tomcat
+    image: bitnami/tomcat:9.0
+    memoryLimit: 512Mi
+    env:
+      - name: TOMCAT_ALLOW_REMOTE_MANAGEMENT
+        value: "1"
+    endpoints:
+      - name: http
+        port: 8080
+        attributes:
+          public: 'true'
+  - 
+    type: dockerimage
+    alias: ignite
+    image: apacheignite/ignite
+    env:
+    - name: IGNITE_WORK_DIR
+      value: /storage
+    memoryLimit: 1G
+    endpoints:
+    - name: ignite-jdbc
+      attributes:
+        discoverable: 'true'
+        public: 'false'
+      port: 11211
+    - name: ignite-local-comm
+      attributes:
+        discoverable: 'true'
+        public: 'false'
+      port: 47100
+    - name: ignite-discovery
+      attributes:
+        discoverable: 'true'
+        public: 'false'
+      port: 47500
+    - name: ignite-idk
+      attributes:
+        discoverable: 'true'
+        public: 'false'
+      port: 49112
+    volumes:
+      - name: ignite_data
+        containerPath: /storage
+    mountSources: true
+commands:
+  -
+    name: maven build
+    actions:
+      -
+        type: exec
+        component: maven
+        command: "mvn clean install"
+        workdir: ${CHE_PROJECTS_ROOT}/project1
+  -
+    name: maven build and deploy
+    actions:
+      -
+        type: exec
+        component: maven
+        command: "mvn clean install && java -jar ./target/*.jar"
+        workdir: ${CHE_PROJECTS_ROOT}/project1
