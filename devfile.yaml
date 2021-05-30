@@ -1,6 +1,8 @@
-schemaVersion: 2.0.0
+# https://docs.devfile.io/devfile/2.1.0/user-guide/migrating-schema-version.html
+schemaVersion: 2.1.0
 metadata:
-  generateName: java-maven-
+  name: project1
+  generateName: java-maven-tomcat
 projects:
   -
     name: Project1
@@ -8,13 +10,13 @@ projects:
       type: git
       location: "git@gitlab.com:CharlesRod/project1.git"
 components:
+#  -
+#    type: chePlugin
+#    id: redhat/java/latest
+#    preferences:
+#      java.server.launchMode: Standard
   -
-    type: chePlugin
-    id: redhat/java/latest
-    preferences:
-      java.server.launchMode: Standard
-  -
-    type: dockerimage
+    type: container
     alias: maven
     image: quay.io/eclipse/che-java8-maven:nightly
     env:
@@ -44,7 +46,7 @@ components:
         attributes:
           public: 'false'
   -
-    type: dockerimage
+    type: container
     alias: tomcat
     image: bitnami/tomcat:9.0
     memoryLimit: 512Mi
@@ -57,7 +59,7 @@ components:
         attributes:
           public: 'true'
   - 
-    type: dockerimage
+    type: container
     alias: ignite
     image: apacheignite/ignite
     env:
@@ -90,19 +92,13 @@ components:
         containerPath: /storage
     mountSources: true
 commands:
-  -
-    name: maven build
-    actions:
-      -
-        type: exec
-        component: maven
-        command: "mvn clean install"
-        workdir: ${CHE_PROJECTS_ROOT}/project1
-  -
-    name: maven build and deploy
-    actions:
-      -
-        type: exec
-        component: maven
-        command: "mvn clean install && java -jar ./target/*.jar"
-        workdir: ${CHE_PROJECTS_ROOT}/project1
+  - exec:
+      name: maven build
+      commandLine: "mvn clean install"
+      component: maven
+      workingDir: ${CHE_PROJECTS_ROOT}/project1      
+  - exec:
+      name: maven build and deploy
+      component: maven
+      commandLine: "mvn clean install && java -jar ./target/*.jar"
+      workingDir: ${CHE_PROJECTS_ROOT}/project1
